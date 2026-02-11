@@ -1,0 +1,40 @@
+#!/bin/bash
+# OpenClaw Calendar Skill
+# 添加日历事件到 macOS 日历
+
+SCRIPT_DIR="$(dirname "$0")"
+
+# 解析参数
+SUMMARY="$1"
+LOCATION="$2"
+DESCRIPTION="$3"
+DAYS_OFFSET="$4"
+HOUR="$5"
+
+if [ -z "$SUMMARY" ] || [ -z "$DAYS_OFFSET" ] || [ -z "$HOUR" ]; then
+  echo "Usage: calendar-add <summary> <location> <description> <days> <hour>"
+  echo "Example: calendar-add '团队会议' 'Zoom' '讨论项目' 1 14"
+  exit 1
+fi
+
+# 设置默认值
+LOCATION="${LOCATION:-}"
+DESCRIPTION="${DESCRIPTION:-}"
+
+# 调用 AppleScript
+osascript << APPLESCRIPT
+set startDate to current date
+set hours of startDate to $HOUR
+set minutes of startDate to 0
+set seconds of startDate to 0
+set day of startDate to (day of startDate) + $DAYS_OFFSET
+set endDate to startDate + 3600
+
+tell application "Calendar"
+  tell calendar "工作"
+    make new event with properties {summary:"$SUMMARY", location:"$LOCATION", description:"$DESCRIPTION", start date:startDate, end date:endDate}
+  end tell
+end tell
+APPLESCRIPT
+
+echo "日历事件已添加: $SUMMARY"
